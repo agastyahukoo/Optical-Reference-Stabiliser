@@ -1,91 +1,81 @@
-# Optical Reference Stabiliser for CubeSat
+# Optical Stabilisation System
 
-This repository contains a Python-based optical reference stabiliser designed for CubeSat missions. It provides real-time circle (target) detection from various input sources (camera, video, or images) and automatically saves configuration settings and output files. The code is split across multiple modules for clarity, with persistent settings stored in a JSON file.
-
----
+A web-based application for **circle detection** and **reference image stabilization**, featuring:
+- **Video Upload** and live-processed playback in the browser
+- **Circle Detection** with configurable Hough Transform parameters
+- **Settings Panel** to adjust and persist detection or output configurations
+- **Dark-Themed UI** for a modern and minimal look
 
 ## Features
-- **Real-Time Circle Detection**  
-  Employs Hough Transform for circle detection in real time.
-- **Multiple Input Modes**  
-  Supports camera (live feed), video files, and still images.
-- **Customisable Output**  
-  Saves processed data in timestamped video/image formats (configurable in the menu).
-- **Persistent Settings**  
-  Stores detection parameters and output preferences in a `config.json` file for future sessions.
-- **Timestamped Filenames**  
-  Automatically names output files based on the current date and time.
-- **Menu-Driven Interface**  
-  Clear command-line menus for selecting inputs and adjusting settings.
 
----
+- **Upload & Detect**: Users can upload video files, which are processed frame-by-frame to detect circles.
+- **Live Preview**: The processed video is streamed back to the browser in real time using Flask’s `Response` streaming.
+- **Configurable Parameters**: The built-in **Settings** panel lets you modify Hough Circle detection parameters (`dp`, `minDist`, `param1`, `param2`, `minRadius`, `maxRadius`) and adjust output formats (`video_format`, `image_format`) — updates are saved to `config.json`.
+- **Toggleable Settings Panel**: Quickly pause (hide) the video to tweak parameters, then resume processing with new settings.
 
 ## Requirements
-- Python 3.7+  
-- [OpenCV](https://opencv.org/) (cv2)
-- NumPy
-- (Optional) Any additional libraries for environment management and packaging
 
-Install dependencies (example with pip):
-```bash
-pip install opencv-python numpy
-```
+- **Python 3.7+**  
+- **Flask 2.0+**  
+- **OpenCV 4.x**  
+- **NumPy**  
 
----
+*(See `requirements.txt` or install via `pip install flask opencv-python numpy`.)*
 
 ## Getting Started
 
-1. **Clone the Repository**  
+1. **Clone** this repository:
    ```bash
-   git clone https://github.com/agastyahukoo/optical-reference-stabiliser.git
-   cd optical-reference-stabiliser
+   git clone https://github.com/agastyahukoo/Optical-Reference-Stabiliser.git
+   cd Optical-Reference-Stabiliser
    ```
 
-2. **Run the Application**  
+2. **Install dependencies**:
    ```bash
-   python main.py
+   pip install -r requirements.txt
    ```
-   This will generate a `config.json` on first launch if it does not exist.
+   *(Or manually install the required Python packages.)*
 
-3. **Follow the Menus**  
-   - **Select Input**: Choose camera, video file, or image file.  
-   - **Configuration**: Adjust circle detection parameters and output formats.  
-   - **Start Detection**: View detections in real time. Press **q** in the display window to quit.
+3. **Configure `config.json`**:
+   ```json
+   {
+       "circle_params": {
+           "dp": 1.2,
+           "minDist": 1000,
+           "param1": 100,
+           "param2": 30,
+           "minRadius": 150,
+           "maxRadius": 300
+       },
+       "output_params": {
+           "video_format": "avi",
+           "image_format": "jpg"
+       }
+   }
+   ```
+   Adjust initial detection or output parameters here.
 
-4. **Check Outputs**  
-   - Processed videos or images are saved in the `output` folder, each file named with a timestamp (e.g. `output_2025_01_12_15_30_59.mp4`).
+4. **Run the Flask server**:
+   ```bash
+   python app.py
+   ```
+   By default, the app runs at `http://127.0.0.1:5000`.
 
----
+5. **Open Your Browser** at `http://127.0.0.1:5000`:
+   - Click **Choose File**, select a video, and **Upload**.
+   - The processed video stream will appear.  
+   - **Settings** lets you pause the preview and adjust circle detection or output settings. Click **Save & Close** to apply changes.
 
-## Project Structure
+## How It Works
 
-```
-├── main.py            # Application entry point and main menu
-├── menu.py            # Menu display and utilities
-├── detection.py       # Core circle detection and output logic
-├── config.py          # Loads/saves settings from/to config.json
-├── config.json        # Auto-generated persistent configuration
-└── output/            # Output folder for processed videos/images
-```
-
----
-
-## Troubleshooting
-- **Local Files Not Detected**: Ensure that you run `main.py` in the same directory as your files, or provide the absolute path.  
-- **Dependencies**: Double-check that OpenCV and NumPy are correctly installed and compatible with your Python version.  
-- **Permissions**: If writing to `output` fails, verify that you have sufficient file permissions.  
-
----
+1. Uploaded videos are saved in the `uploads/` folder.  
+2. Frames are processed with Hough Circle detection (CLAHE > Gaussian Blur > HoughCircles).  
+3. The **Settings** panel updates `config.json` in real time, so new frames use the updated parameters.  
 
 ## Contributing
-Contributions, suggestions, and bug reports are welcomed. Please open an issue or submit a pull request with relevant details. 
 
----
+Feel free to **open issues** or **create pull requests** for improvements, bug fixes, or new features. Any help is appreciated!
 
-## Disclaimer
-This software is provided as-is for demonstration and development purposes in a CubeSat context. It is **not** guaranteed to meet flight software requirements without further testing and validation.  
+## License
 
----
-
-## Licence
-This project is available under the [MIT Licence](https://opensource.org/licenses/MIT).  
+This project is made available under the [MIT License](LICENSE).  
