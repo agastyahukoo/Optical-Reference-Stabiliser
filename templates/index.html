@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Optical Stabilisation System</title>
+  <style>
+    :root {
+      --bg-color: #181818;
+      --sidebar-color: #1a1a1a;
+      --text-color: #fff;
+      --button-color: #444;
+      --button-hover: #666;
+      --border-color: #555;
+      --panel-bg: #202020;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* Sidebar styling */
+    #sidebar {
+      width: 300px;
+      background-color: var(--sidebar-color);
+      padding: 1em;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 1em;
+    }
+    #fileList {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      border: 1px solid var(--border-color);
+      max-height: 40vh;
+      overflow-y: auto;
+    }
+    #fileList li {
+      padding: 0.5em 1em;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    #fileList li:hover {
+      background-color: var(--button-hover);
+    }
+    /* Small link styling for the GitHub link in sidebar */
+    #githubLink a {
+      color: #bbb;
+      text-decoration: none;
+    }
+    #githubLink a:hover {
+      text-decoration: underline;
+    }
+    /* Hide the actual file input; we use a label to style the button */
+    #videoFile {
+      display: none;
+    }
+    /* Custom buttons */
+    .custom-btn {
+      display: inline-block;
+      width: 100%;
+      padding: 0.75em 1em;
+      background-color: var(--button-color);
+      color: var(--text-color);
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      font-size: 1em;
+      box-sizing: border-box;
+      margin-bottom: 0.5em;
+    }
+    .custom-btn:hover {
+      background-color: var(--button-hover);
+    }
+
+    /* Main content area */
+    #content {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Video Container */
+    #videoContainer {
+      width: 100%;
+      height: 100%;
+      display: none; 
+      position: relative;
+    }
+    /* Removed "Processed Video Feed" alt text */
+    #processedVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background-color: #000;
+      border: none;
+    }
+
+    /* Settings Container (replaces the video when open) */
+    #settingsContainer {
+      display: none; 
+      width: 100%;
+      height: 100%;
+      background-color: var(--panel-bg);
+      box-sizing: border-box;
+      padding: 2em;
+      overflow-y: auto;
+    }
+    #settingsContainer h2 {
+      margin-top: 0;
+      margin-bottom: 1.5em;
+    }
+    /* Section styling: removed border */
+    .settings-section {
+      background-color: #2b2b2b;
+      /* No border */
+      border-radius: 6px;
+      padding: 1em;
+      margin-bottom: 1.5em;
+    }
+    .settings-section h3 {
+      margin-top: 0;
+      font-size: 1.1em;
+      margin-bottom: 1em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    /* A simple 2-column grid for the param fields */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1em;
+    }
+    /* For each label/input pair */
+    .form-field label {
+      display: block;
+      margin-bottom: 0.3em;
+      font-weight: 600;
+      font-size: 0.95em;
+    }
+    .form-field input,
+    .form-field select {
+      width: 100%;
+      padding: 0.5em;
+      box-sizing: border-box;
+      background-color: #3a3a3a;
+      border: 1px solid #333;
+      color: var(--text-color);
+      border-radius: 4px;
+      font-size: 0.95em;
+    }
+
+    /* Smaller Save & Close button */
+    #saveSettingsBtn {
+      width: auto; 
+      padding: 0.4em 0.8em;
+      margin-top: 1em;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <!-- List of uploaded files -->
+    <ul id="fileList"></ul>
+
+    <!-- File upload form -->
+    <form id="uploadForm">
+      <label for="videoFile" class="custom-btn">Choose File</label>
+      <input type="file" id="videoFile" accept="video/*" />
+      <button type="submit" id="uploadBtn" class="custom-btn">Upload</button>
+    </form>
+
+    <!-- Settings button (toggle open/close) -->
+    <button id="settingsBtn" class="custom-btn">Settings</button>
+
+    <!-- Small GitHub link in the sidebar -->
+    <div id="githubLink">
+      <small>
+        <a href="https://github.com/agastyahukoo/Optical-Reference-Stabiliser" target="_blank">
+          GitHub
+        </a>
+      </small>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div id="content">
+    <div id="videoContainer">
+      <img id="processedVideo" src="" alt="" />
+    </div>
+
+    <div id="settingsContainer">
+      <h2>Detection &amp; Recording / Saving Settings</h2>
+
+      <!-- Circle Detection Section -->
+      <div class="settings-section">
+        <h3>Circle Detection</h3>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="dpInput">dp</label>
+            <input type="number" step="0.1" id="dpInput" />
+          </div>
+          <div class="form-field">
+            <label for="minDistInput">minDist</label>
+            <input type="number" step="1" id="minDistInput" />
+          </div>
+          <div class="form-field">
+            <label for="param1Input">param1</label>
+            <input type="number" step="1" id="param1Input" />
+          </div>
+          <div class="form-field">
+            <label for="param2Input">param2</label>
+            <input type="number" step="1" id="param2Input" />
+          </div>
+          <div class="form-field">
+            <label for="minRadiusInput">minRadius</label>
+            <input type="number" step="1" id="minRadiusInput" />
+          </div>
+          <div class="form-field">
+            <label for="maxRadiusInput">maxRadius</label>
+            <input type="number" step="1" id="maxRadiusInput" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Renamed Output Section -->
+      <div class="settings-section">
+        <h3>Recording / Saving</h3>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="videoFormatSelect">video_format</label>
+            <select id="videoFormatSelect">
+              <option value="avi">avi</option>
+              <option value="mp4">mp4</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="imageFormatSelect">image_format</label>
+            <select id="imageFormatSelect">
+              <option value="jpg">jpg</option>
+              <option value="png">png</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button id="saveSettingsBtn" class="custom-btn">Save &amp; Close</button>
+    </div>
+  </div>
+
+  <script>
+    // =========== DOM Elements ===========
+    const uploadForm       = document.getElementById('uploadForm');
+    const videoFile        = document.getElementById('videoFile');
+    const fileList         = document.getElementById('fileList');
+    const videoContainer   = document.getElementById('videoContainer');
+    const processedVideo   = document.getElementById('processedVideo');
+    const chooseFileLabel  = document.querySelector('label[for="videoFile"]');
+    const settingsBtn      = document.getElementById('settingsBtn');
+    const settingsContainer= document.getElementById('settingsContainer');
+    const saveSettingsBtn  = document.getElementById('saveSettingsBtn');
+
+    // Settings input fields
+    const dpInput          = document.getElementById('dpInput');
+    const minDistInput     = document.getElementById('minDistInput');
+    const param1Input      = document.getElementById('param1Input');
+    const param2Input      = document.getElementById('param2Input');
+    const minRadiusInput   = document.getElementById('minRadiusInput');
+    const maxRadiusInput   = document.getElementById('maxRadiusInput');
+    const videoFormatSelect= document.getElementById('videoFormatSelect');
+    const imageFormatSelect= document.getElementById('imageFormatSelect');
+
+    let uploadedFiles = [];
+
+    // =========== INITIAL FETCH OF SETTINGS ===========
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const res = await fetch('/get_settings');
+        if (!res.ok) throw new Error('Failed to load initial settings.');
+        const data = await res.json();
+        populateSettingsForm(data);
+      } catch (err) {
+        console.error(err);
+      }
+    });
+
+    function populateSettingsForm(config) {
+      const { circle_params, output_params } = config;
+
+      dpInput.value        = circle_params.dp;
+      minDistInput.value   = circle_params.minDist;
+      param1Input.value    = circle_params.param1;
+      param2Input.value    = circle_params.param2;
+      minRadiusInput.value = circle_params.minRadius;
+      maxRadiusInput.value = circle_params.maxRadius;
+
+      videoFormatSelect.value = output_params.video_format;
+      imageFormatSelect.value = output_params.image_format;
+    }
+
+    // =========== FILE UPLOAD ===========
+    uploadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!videoFile.files.length) {
+        alert('Please select a video file first.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', videoFile.files[0]);
+
+      try {
+        const response = await fetch('/upload', {
+          method: 'POST',
+          body: formData
+        });
+        if (!response.ok) {
+          throw new Error('Upload failed.');
+        }
+
+        const data = await response.json();
+        const filePath = data.file_path;
+
+        // Clear file input
+        videoFile.value = '';
+        chooseFileLabel.textContent = 'Choose File';
+
+        // Add to uploaded list and show the video
+        uploadedFiles.push(filePath);
+        updateFileList();
+        showVideo(filePath);
+      } catch (error) {
+        console.error(error);
+        alert('An error occurred while uploading the video.');
+      }
+    });
+
+    // Update label for chosen file
+    videoFile.addEventListener('change', () => {
+      if (videoFile.files.length) {
+        chooseFileLabel.textContent = videoFile.files[0].name;
+      } else {
+        chooseFileLabel.textContent = 'Choose File';
+      }
+    });
+
+    function updateFileList() {
+      fileList.innerHTML = '';
+      uploadedFiles.forEach((fileName) => {
+        const li = document.createElement('li');
+        li.textContent = fileName;
+        li.dataset.filename = fileName;
+        li.addEventListener('click', () => showVideo(fileName));
+        fileList.appendChild(li);
+      });
+    }
+
+    function showVideo(filename) {
+      // Show video container, hide settings
+      videoContainer.style.display = 'block';
+      settingsContainer.style.display = 'none';
+      processedVideo.src = `/video_feed/${filename}`;
+    }
+
+    // =========== SETTINGS PANEL TOGGLE ===========
+    settingsBtn.addEventListener('click', () => {
+      // Toggle open/close
+      if (settingsContainer.style.display === 'block') {
+        // Currently open, so close it and show the video if we have one
+        settingsContainer.style.display = 'none';
+        if (processedVideo.src) {
+          videoContainer.style.display = 'block';
+        }
+      } else {
+        // Currently closed, so open it and hide the video
+        videoContainer.style.display = 'none';
+        settingsContainer.style.display = 'block';
+      }
+    });
+
+    // =========== SAVE SETTINGS ===========
+    saveSettingsBtn.addEventListener('click', async () => {
+      const newConfig = {
+        circle_params: {
+          dp:        parseFloat(dpInput.value),
+          minDist:   parseInt(minDistInput.value),
+          param1:    parseInt(param1Input.value),
+          param2:    parseInt(param2Input.value),
+          minRadius: parseInt(minRadiusInput.value),
+          maxRadius: parseInt(maxRadiusInput.value)
+        },
+        output_params: {
+          video_format: videoFormatSelect.value,
+          image_format: imageFormatSelect.value
+        }
+      };
+
+      try {
+        const res = await fetch('/update_settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newConfig)
+        });
+        if (!res.ok) throw new Error('Failed to save settings.');
+
+        // Hide settings panel and show video container if we have a loaded video
+        settingsContainer.style.display = 'none';
+        if (processedVideo.src) {
+          videoContainer.style.display = 'block';
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Could not save settings.');
+      }
+    });
+  </script>
+</body>
+</html>
